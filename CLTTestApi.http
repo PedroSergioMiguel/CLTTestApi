@@ -1,0 +1,106 @@
+@CLTTestApi_HostAddress = http://localhost:5036
+@ApiKey = clt-demo-api-key-2026
+
+### Crear usuario
+POST {{CLTTestApi_HostAddress}}/users
+Content-Type: application/json
+X-API-KEY: {{ApiKey}}
+
+{
+  "name": "Juan",
+  "email": "juan@test.com"
+}
+
+### Listar usuarios (sin filtro)
+GET {{CLTTestApi_HostAddress}}/users
+X-API-KEY: {{ApiKey}}
+Accept: application/json
+
+### Listar usuarios activos
+GET {{CLTTestApi_HostAddress}}/users?isActive=true
+X-API-KEY: {{ApiKey}}
+Accept: application/json
+
+### Obtener usuario por id
+GET {{CLTTestApi_HostAddress}}/users/1
+X-API-KEY: {{ApiKey}}
+Accept: application/json
+
+### Actualizar usuario
+PUT {{CLTTestApi_HostAddress}}/users/1
+Content-Type: application/json
+X-API-KEY: {{ApiKey}}
+
+{
+  "name": "Juan Pérez",
+  "email": "juan.perez@test.com",
+  "isActive": true
+}
+
+### Eliminar usuario
+DELETE {{CLTTestApi_HostAddress}}/users/1
+X-API-KEY: {{ApiKey}}
+
+### Crear dirección
+POST {{CLTTestApi_HostAddress}}/users/1/addresses
+Content-Type: application/json
+X-API-KEY: {{ApiKey}}
+
+{
+  "street": "Calle Falsa 123",
+  "city": "Asunción",
+  "country": "Paraguay",
+  "zipCode": "9999"
+}
+
+### Listar direcciones del usuario
+GET {{CLTTestApi_HostAddress}}/users/1/addresses
+X-API-KEY: {{ApiKey}}
+Accept: application/json
+
+### Actualizar dirección
+PUT {{CLTTestApi_HostAddress}}/addresses/1
+Content-Type: application/json
+X-API-KEY: {{ApiKey}}
+
+{
+  "street": "Av. Mcal. López 456",
+  "city": "Asunción",
+  "country": "Paraguay",
+  "zipCode": "1234"
+}
+
+### Eliminar dirección
+DELETE {{CLTTestApi_HostAddress}}/addresses/1
+X-API-KEY: {{ApiKey}}
+
+### Listar monedas
+GET {{CLTTestApi_HostAddress}}/currencies
+X-API-KEY: {{ApiKey}}
+Accept: application/json
+
+### Crear moneda
+POST {{CLTTestApi_HostAddress}}/currencies
+Content-Type: application/json
+X-API-KEY: {{ApiKey}}
+
+{
+  "code": "EUR",
+  "name": "Euro",
+  "rateToBase": 7900
+}
+
+### Convertir moneda
+POST {{CLTTestApi_HostAddress}}/currency/convert
+Content-Type: application/json
+X-API-KEY: {{ApiKey}}
+
+{
+  "fromCurrencyCode": "USD",
+  "toCurrencyCode": "PYG",
+  "amount": 100
+}
+
+### Sin API Key (debe devolver 401)
+GET {{CLTTestApi_HostAddress}}/currencies
+Accept: application/json

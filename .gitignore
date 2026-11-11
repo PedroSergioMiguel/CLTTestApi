@@ -1,0 +1,14 @@
+# Build
+bin/
+obj/
+.vs/
+.idea/
+*.user
+
+# SQLite (base local, se genera al ejecutar)
+clt_test.db
+clt_test.db-shm
+clt_test.db-wal
+*.db
+*.db-shm
+*.db-wal

@@ -1,0 +1,819 @@
+{
+  "info": {
+    "name": "CLTTestApi - Prueba Técnica",
+    "_postman_id": "7f1c2d9e-4b6a-4c1e-9f3a-123456789abc",
+    "description": "Colección completa de la API REST .NET 10 (Users, Addresses, Currencies y conversión) con seguridad por X-API-KEY.\n\nVariables de colección:\n- baseUrl: http://localhost:5036\n- apiKey: clt-demo-api-key-2026\n- userId / addressId / email / currencyCode: se generan o actualizan automáticamente al ejecutar la colección en orden.\n\nAntes de ejecutar: iniciar la API con `dotnet run`. La colección es repetible: crea datos con emails y códigos únicos y los elimina al final.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-API-KEY",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "{{apiKey}}",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5036",
+      "type": "string"
+    },
+    {
+      "key": "apiKey",
+      "value": "clt-demo-api-key-2026",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "addressId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "juan@test.com",
+      "type": "string"
+    },
+    {
+      "key": "updatedEmail",
+      "value": "juan.perez@test.com",
+      "type": "string"
+    },
+    {
+      "key": "currencyCode",
+      "value": "T000001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Users",
+      "description": "CRUD de usuarios. Ejecutar en orden para guardar el userId.",
+      "item": [
+        {
+          "name": "Crear usuario",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const suffix = Date.now();",
+                  "pm.collectionVariables.set(\"email\", `juan.${suffix}@test.com`);",
+                  "pm.collectionVariables.set(\"updatedEmail\", `juan.perez.${suffix}@test.com`);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set(\"userId\", body.id);",
+                  "pm.test(\"Devuelve id, name, email e isActive\", () => {",
+                  "  pm.expect(body.id).to.be.a(\"number\");",
+                  "  pm.expect(body.name).to.eql(\"Juan\");",
+                  "  pm.expect(body.isActive).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan\",\n  \"email\": \"{{email}}\",\n  \"password\": \"Secreto123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/users",
+            "description": "Crea un usuario con un email único generado por el pre-request script. El password es opcional y se guarda hasheado."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar usuarios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve un array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users",
+            "description": "Lista todos los usuarios."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar usuarios activos (isActive=true)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users?isActive=true",
+            "description": "Filtro por isActive. También se acepta el alias is_active."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar usuarios inactivos (is_active=false)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users?is_active=false",
+            "description": "Demuestra el alias is_active del filtro."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener usuario por id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Mismo usuario creado\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"userId\"))));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users/{{userId}}",
+            "description": "Obtiene el usuario creado previamente."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Nombre actualizado\", () => pm.expect(body.name).to.eql(\"Juan Pérez\"));",
+                  "pm.test(\"isActive actualizado\", () => pm.expect(body.isActive).to.eql(true));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan Pérez\",\n  \"email\": \"{{updatedEmail}}\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/users/{{userId}}",
+            "description": "Actualiza name, email e isActive."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Addresses",
+      "description": "Direcciones relacionadas 1:N con Users.",
+      "item": [
+        {
+          "name": "Crear dirección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set(\"addressId\", body.id);",
+                  "pm.test(\"Asociada al usuario\", () => pm.expect(body.userId).to.eql(Number(pm.collectionVariables.get(\"userId\"))));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"street\": \"Calle Falsa 123\",\n  \"city\": \"Asunción\",\n  \"country\": \"Paraguay\",\n  \"zipCode\": \"9999\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/users/{{userId}}/addresses",
+            "description": "Crea una dirección para el usuario. Si el usuario no existe devuelve 404."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar direcciones del usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Devuelve un array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users/{{userId}}/addresses",
+            "description": "Lista las direcciones del usuario."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar dirección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Calle actualizada\", () => pm.expect(pm.response.json().street).to.eql(\"Av. Mcal. López 456\"));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"street\": \"Av. Mcal. López 456\",\n  \"city\": \"Asunción\",\n  \"country\": \"Paraguay\",\n  \"zipCode\": \"1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/addresses/{{addressId}}",
+            "description": "Actualiza calle, ciudad, país y código postal."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear dirección para usuario inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"street\": \"Calle 1\",\n  \"city\": \"Asunción\",\n  \"country\": \"Paraguay\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/users/999999/addresses",
+            "description": "Valida que se devuelva 404 cuando el userId no existe."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - Currencies",
+      "description": "Listado y creación de monedas.",
+      "item": [
+        {
+          "name": "Listar monedas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "const codes = pm.response.json().map(c => c.code);",
+                  "pm.test(\"Contiene PYG y USD semilla\", () => {",
+                  "  pm.expect(codes).to.include(\"PYG\");",
+                  "  pm.expect(codes).to.include(\"USD\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/currencies",
+            "description": "Lista las monedas. Al iniciar se siembran PYG (1) y USD (7300)."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear moneda de prueba",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const code = \"T\" + Date.now().toString().slice(-6);",
+                  "pm.collectionVariables.set(\"currencyCode\", code);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Código en mayúsculas\", () => pm.expect(pm.response.json().code).to.eql(pm.collectionVariables.get(\"currencyCode\")));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{currencyCode}}\",\n  \"name\": \"Moneda de prueba\",\n  \"rateToBase\": 7900\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/currencies",
+            "description": "Crea una moneda con código único generado por el pre-request script (RateToBase 7900)."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear moneda duplicada (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Error de unicidad\", () => pm.expect(JSON.stringify(pm.response.json().errors)).to.include(\"ya existe\"));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"usd\",\n  \"name\": \"Dólar duplicado\",\n  \"rateToBase\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/currencies",
+            "description": "Valida código único sin distinguir mayúsculas/minúsculas."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear moneda inválida (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"GBP\",\n  \"name\": \"Libra\",\n  \"rateToBase\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/currencies",
+            "description": "rateToBase debe ser mayor a 0."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Currency Conversion",
+      "description": "Conversión usando RateToBase.",
+      "item": [
+        {
+          "name": "Convertir USD a PYG (100)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"100 USD = 730000 PYG\", () => pm.expect(body.convertedAmount).to.eql(730000));",
+                  "pm.test(\"Monedas correctas\", () => {",
+                  "  pm.expect(body.fromCurrency).to.eql(\"USD\");",
+                  "  pm.expect(body.toCurrency).to.eql(\"PYG\");",
+                  "  pm.expect(body.originalAmount).to.eql(100);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromCurrencyCode\": \"USD\",\n  \"toCurrencyCode\": \"PYG\",\n  \"amount\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/currency/convert",
+            "description": "montoBase = 100 * 7300 = 730000; converted = 730000 / 1 = 730000."
+          },
+          "response": []
+        },
+        {
+          "name": "Convertir USD a moneda de prueba (100)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Conversión calculada\", () => pm.expect(pm.response.json().convertedAmount).to.eql(92.4051));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromCurrencyCode\": \"USD\",\n  \"toCurrencyCode\": \"{{currencyCode}}\",\n  \"amount\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/currency/convert",
+            "description": "Requiere la moneda creada en el paso anterior (RateToBase 7900): 730000 / 7900 = 92.4051."
+          },
+          "response": []
+        },
+        {
+          "name": "Moneda inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromCurrencyCode\": \"XXX\",\n  \"toCurrencyCode\": \"PYG\",\n  \"amount\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/currency/convert",
+            "description": "Ambas monedas deben existir."
+          },
+          "response": []
+        },
+        {
+          "name": "Monto inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fromCurrencyCode\": \"USD\",\n  \"toCurrencyCode\": \"PYG\",\n  \"amount\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/currency/convert",
+            "description": "amount debe ser mayor a 0."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - Seguridad",
+      "description": "Verificación del middleware de API Key.",
+      "item": [
+        {
+          "name": "Sin API Key (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"401 Unauthorized\", () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/currencies",
+            "description": "Sin header X-API-KEY debe devolver 401."
+          },
+          "response": []
+        },
+        {
+          "name": "API Key incorrecta (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"401 Unauthorized\", () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-API-KEY",
+                "value": "llave-incorrecta",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/currencies",
+            "description": "Con una API Key inválida debe devolver 401."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 - Limpieza",
+      "description": "Elimina los datos creados por la colección.",
+      "item": [
+        {
+          "name": "Eliminar dirección",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"204 No Content\", () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/addresses/{{addressId}}",
+            "description": "Elimina la dirección creada."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"204 No Content\", () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/users/{{userId}}",
+            "description": "Elimina el usuario. Sus direcciones restantes se borran en cascada."
+          },
+          "response": []
+        },
+        {
+          "name": "Verificar usuario eliminado (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/users/{{userId}}",
+            "description": "Comprueba que el usuario ya no existe."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
